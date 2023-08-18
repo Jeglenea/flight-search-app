@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   FaPlaneArrival,
   FaPlaneDeparture,
@@ -11,6 +11,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 import { useForm } from "react-hook-form";
+
+import Select from "react-select";
 
 function FlightSearch() {
   const {
@@ -35,6 +37,38 @@ function FlightSearch() {
   };
 
   const onSubmit = (data) => alert(JSON.stringify(data));
+
+  const [flights, setFlights] = useState([]); // A state is defined to store aircraft information
+
+  const [departureAirport, setDepartureAirport] = useState(null); // Seçili havalimanı bilgisi
+  const [arrivalAirport, setArrivalAirport] = useState(null); // Seçili varış havalimanı bilgisi
+
+  useEffect(() => {
+    // useEffect is used to pull aircraft information from Mock API
+    fetch("https://64df6cf071c3335b258298d2.mockapi.io/flights", {
+      method: "GET",
+      headers: { "content-type": "application/json" },
+    })
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error("Network response was not ok");
+      })
+      .then((data) => {
+        // Gelen verileri uygun formata dönüştürüp "flights" state'ine ekliyoruz
+        const formattedFlights = data.map((flight) => ({
+          id: flight.id,
+          airportDepartureName: flight.departureAirport,
+          airportArrivalName: flight.arrivalAirport,
+        }));
+        setFlights(formattedFlights);
+      })
+      .catch((error) => {
+        console.error("Fetch error:", error);
+      });
+  }, []); // With the empty array, it only works when the page is loaded.
+
   return (
     <React.Fragment>
       <section>
@@ -102,32 +136,21 @@ function FlightSearch() {
                   <div>
                     <div className="relative ml-5 mr-5">
                       <p className="font-bold text-xl uppercase">flying from</p>
-                      <select
+                      <Select
                         className={`w-full h-16 text-2xl pl-20 rounded-lg ${
                           errors.departure &&
                           " focus:border-red-500 focus:ring-red-500 border-red-500"
                         }`}
-                        {...register("departure", {
-                          required: {
-                            value: true,
-                            message: "Departure is required",
-                          },
-                        })}
-                      >
-                        <option value="" selected disabled hidden>
-                          --Select Airport--
-                        </option>
-                        <option value="ENIA">
-                          {" "}
-                          England Newcastle International Airport
-                        </option>
-                        <option value="INIA">
-                          {" "}
-                          Italy Naples International Airport
-                        </option>
-                        <option value="MMA"> Malaysia Mulu Airport</option>
-                        <option value="KMA"> Kenya Malindi Airport</option>
-                      </select>
+                        value={departureAirport}
+                        onChange={(selectedOption) => {
+                          setDepartureAirport(selectedOption);
+                          setValue("departure", selectedOption?.value);
+                        }}
+                        options={flights.map((flight) => ({
+                          value: flight.id,
+                          label: flight.airportDepartureName,
+                        }))}
+                      />
                       <FaPlaneDeparture className="text-4xl absolute left-5 top-10 " />
                     </div>
                     <div>
@@ -140,37 +163,25 @@ function FlightSearch() {
                   </div>
                 </div>
 
-                {/* Arrival Part */}
                 <div>
                   <div>
                     <div className="relative ml-5 mr-5">
                       <p className="font-bold text-xl uppercase">flying to</p>
-                      <select
+                      <Select
                         className={`w-full h-16 text-2xl pl-20 rounded-lg ${
                           errors.arrival &&
                           " focus:border-red-500 focus:ring-red-500 border-red-500"
                         }`}
-                        {...register("arrival", {
-                          required: {
-                            value: true,
-                            message: "Arrival is required",
-                          },
-                        })}
-                      >
-                        <option value="" selected disabled hidden>
-                          --Select Airport--
-                        </option>
-                        <option value="ENIA">
-                          {" "}
-                          England Newcastle International Airport
-                        </option>
-                        <option value="INIA">
-                          {" "}
-                          Italy Naples International Airport
-                        </option>
-                        <option value="MMA"> Malaysia Mulu Airport</option>
-                        <option value="KMA"> Kenya Malindi Airport</option>
-                      </select>
+                        value={arrivalAirport}
+                        onChange={(selectedOption) => {
+                          setArrivalAirport(selectedOption);
+                          setValue("arrival", selectedOption?.value);
+                        }}
+                        options={flights.map((flight) => ({
+                          value: flight.id,
+                          label: flight.airportArrivalName,
+                        }))}
+                      />
                       <FaPlaneArrival className="text-4xl absolute left-5 top-10 " />
                     </div>
                     <div>
@@ -198,7 +209,7 @@ function FlightSearch() {
                               errors.departureDate &&
                               "focus:border-red-500 focus:ring-red-500 border-red-500"
                             }`}
-                            selected={departureDate} 
+                            selected={departureDate}
                             onChange={handleDepartureDateChange}
                           />
                           <FaCalendarAlt className="text-2xl absolute left-40 top-10 " />
@@ -230,8 +241,8 @@ function FlightSearch() {
                               errors.departureDate &&
                               "focus:border-red-500 focus:ring-red-500 border-red-500"
                             }`}
-                            selected={departureDate} 
-                            onChange={handleDepartureDateChange} 
+                            selected={departureDate}
+                            onChange={handleDepartureDateChange}
                           />
                           <FaCalendarAlt className="text-2xl absolute left-52 top-10 " />
 
@@ -406,7 +417,7 @@ function FlightSearch() {
                   <input
                     type="submit"
                     value="Find flight"
-                    className="w-full h-16 font-bold text-3xl uppercase rounded-lg bg-green-100 hover:bg-white"
+                    className="w-full h-16 font-bold text-3xl uppercase rounded-lg bg-green-200 hover:bg-white"
                   />
                 </div>
               </div>

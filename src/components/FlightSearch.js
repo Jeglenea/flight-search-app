@@ -2,8 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   FaPlaneArrival,
   FaPlaneDeparture,
-  FaMale,
-  FaChild,
   FaCalendarAlt,
 } from "react-icons/fa";
 
